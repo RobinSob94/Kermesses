@@ -1,0 +1,1699 @@
+definitions:
+  gin.H:
+    additionalProperties: {}
+    type: object
+  models.History:
+    properties:
+      date:
+        type: string
+      id:
+        type: integer
+      nb_jetons:
+        type: integer
+      stand_name:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.Jetons:
+    properties:
+      id:
+        type: integer
+      nb_jetons:
+        type: integer
+      price:
+        type: number
+    type: object
+  models.Kermesse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      organisateurs:
+        description: 'Relations Many-to-Many : Organisateurs et participants de la
+          kermesse'
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      participants:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      picture:
+        type: string
+      stands:
+        items:
+          $ref: '#/definitions/models.Stand'
+        type: array
+      user_id:
+        description: 'Relation Many-to-One : L''utilisateur qui crée la kermesse'
+        type: integer
+    type: object
+  models.Product:
+    properties:
+      id:
+        type: integer
+      jetons_requis:
+        type: integer
+      name:
+        type: string
+      nb_products:
+        type: integer
+      picture:
+        type: string
+      stand_id:
+        description: Clé étrangère vers le stand
+        type: integer
+      type:
+        type: string
+    type: object
+  models.Stand:
+    properties:
+      conso:
+        type: integer
+      id:
+        type: integer
+      jetons_requis:
+        type: integer
+      kermesses:
+        items:
+          $ref: '#/definitions/models.Kermesse'
+        type: array
+      name:
+        type: string
+      pts_donnees:
+        type: integer
+      stocks:
+        description: Clé étrangère vers Product
+        items:
+          $ref: '#/definitions/models.Product'
+        type: array
+      type:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  models.Transaction:
+    properties:
+      Quantity:
+        type: integer
+      date_transaction:
+        type: string
+      id:
+        type: integer
+      price:
+        type: number
+      type:
+        type: string
+      user_id:
+        description: Relations avec l'utilisateur
+        type: integer
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      enfants:
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      firstname:
+        type: string
+      historique:
+        items:
+          $ref: '#/definitions/models.History'
+        type: array
+      id:
+        type: integer
+      jetons:
+        type: integer
+      kermesses:
+        description: Relations One-to-Many pour les Kermesses et Stands gérés par
+          l'utilisateur
+        items:
+          $ref: '#/definitions/models.Kermesse'
+        type: array
+      lastname:
+        type: string
+      parents:
+        description: Relations Many-to-Many pour Parents/Enfants
+        items:
+          $ref: '#/definitions/models.User'
+        type: array
+      password:
+        type: string
+      picture:
+        type: string
+      pts_attribues:
+        type: integer
+      role:
+        description: 1 = ADMIN / 2 = ORGANISATEUR / 3 = TENEUR DE STAND / 4 = PARENT
+          / 5 ELEVE
+        type: integer
+      stands:
+        items:
+          $ref: '#/definitions/models.Stand'
+        type: array
+      transactions:
+        items:
+          $ref: '#/definitions/models.Transaction'
+        type: array
+    type: object
+  requests.AddChildrenRequest:
+    properties:
+      children_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  requests.AddStandRequest:
+    properties:
+      stand_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - stand_ids
+    type: object
+  requests.AddUserRequest:
+    properties:
+      type:
+        type: string
+      user_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  requests.GiveCoinRequest:
+    properties:
+      nb_jetons:
+        type: integer
+    type: object
+  requests.GivePointsRequest:
+    properties:
+      points:
+        type: integer
+    type: object
+  requests.KermeseRequest:
+    properties:
+      name:
+        type: string
+      picture:
+        type: string
+    type: object
+  requests.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  requests.PaymentRequest:
+    properties:
+      price:
+        type: number
+      quantity:
+        type: integer
+      type:
+        type: string
+    required:
+    - price
+    - quantity
+    - type
+    type: object
+  requests.QuantityProductRequest:
+    properties:
+      quantity:
+        type: integer
+    type: object
+  requests.SignupRequest:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      picture:
+        type: string
+      role:
+        type: integer
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    type: object
+  requests.StandRequest:
+    properties:
+      jetons_requis:
+        type: integer
+      name:
+        type: string
+      type:
+        type: string
+    required:
+    - jetons_requis
+    - name
+    - type
+    type: object
+info:
+  contact: {}
+paths:
+  /add-children:
+    post:
+      consumes:
+      - application/json
+      description: Permet de créer une relation entre les parents et les enfant
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Ajouter un ou plusieurs enfants
+        in: body
+        name: parent
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AddChildrenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Créer une relation parents/enfants
+      tags:
+      - Parent
+  /api/users:
+    get:
+      description: Récupère la liste de tous les utilisateurs
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère tous les utilisateurs
+      tags:
+      - User
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouvel utilisateur avec les informations fournies
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Utilisateur à créer
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/requests.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Crée un nouvel utilisateur
+      tags:
+      - User
+  /api/users/{id}:
+    delete:
+      description: Supprime un utilisateur spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Utilisateur non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Supprime un utilisateur par ID
+      tags:
+      - User
+    get:
+      description: Récupère les informations d'un utilisateur spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "404":
+          description: Utilisateur non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère un utilisateur par ID
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un utilisateur spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Utilisateur à mettre à jour
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.User'
+        "404":
+          description: Utilisateur non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Met à jour un utilisateur par ID
+      tags:
+      - User
+  /api/users/{id}/give-coins:
+    post:
+      consumes:
+      - application/json
+      description: Permet à un parent de transférer des jetons à ses enfants
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'enfant
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Détails du transfert de jetons (seulement la quantité de jetons)
+        in: body
+        name: transaction
+        required: true
+        schema:
+          $ref: '#/definitions/requests.GiveCoinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Mauvaise requête
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Non autorisé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Enfant non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Transférer des jetons aux enfants
+      tags:
+      - Parent
+  /create-jeton:
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau jeton
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Jeton à créer
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.Jetons'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Jetons'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Crée un nouveau jeton
+      tags:
+      - Jeton
+  /create-kermesse:
+    post:
+      consumes:
+      - application/json
+      description: Permet aux user de créé un groupe de groupeVoyage
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Données de la kermesse
+        in: body
+        name: kermesse
+        required: true
+        schema:
+          $ref: '#/definitions/requests.KermeseRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Groupe créé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Voyage non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Créé une kermesse
+      tags:
+      - Kermesse
+  /create-product:
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouvel produit avec les informations fournies
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Produit à créer
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.Product'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Product'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Crée un nouveau produit
+      tags:
+      - Product
+  /create-stand:
+    post:
+      consumes:
+      - application/json
+      description: Crée un nouveau stand avec les informations fournies
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Stand à créer
+        in: body
+        name: stand
+        required: true
+        schema:
+          $ref: '#/definitions/requests.StandRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Crée un nouveau stand
+      tags:
+      - Stand
+  /jetons:
+    get:
+      description: Récupère la liste de tous les jetons
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Jetons'
+            type: array
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Récupère tous les jetons
+      tags:
+      - Jeton
+  /jetons/{id}/delete:
+    delete:
+      description: Supprime un jeton spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID du jeton
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Jeton non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Supprime un jeton par ID
+      tags:
+      - Jeton
+  /jetons/{id}/update:
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un jeton spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Utilisateur à mettre à jour
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.Jetons'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Jetons'
+        "404":
+          description: Jeton non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Met à jour un jeton par ID
+      tags:
+      - Jeton
+  /kermesses:
+    get:
+      consumes:
+      - application/json
+      description: Fetches kermesses for admin, organizers, and participants
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of kermesses
+          schema:
+            items:
+              $ref: '#/definitions/models.Kermesse'
+            type: array
+        "401":
+          description: User not logged
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Get all Kermesses based on user role
+      tags:
+      - Kermesse
+  /kermesses/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetch a kermesse by its ID if the user has permission
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Kermesse found
+          schema:
+            $ref: '#/definitions/models.Kermesse'
+        "401":
+          description: User not logged
+          schema:
+            $ref: '#/definitions/gin.H'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Kermesse not found
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Get a Kermesse by its ID
+      tags:
+      - Kermesse
+  /kermesses/{id}/add-stands:
+    post:
+      consumes:
+      - application/json
+      description: Permet d'ajouter des users (partcicpants ou organisateurs)
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Données du groupe
+        in: body
+        name: kermesse
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AddStandRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Stand ajouté
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: kermesse non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Ajouter des stands à la kermesse
+      tags:
+      - Kermesse
+  /kermesses/{id}/add-users:
+    post:
+      consumes:
+      - application/json
+      description: Permet aux user de créé un groupe de groupeVoyage
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Données du groupe
+        in: body
+        name: kermesse
+        required: true
+        schema:
+          $ref: '#/definitions/requests.AddUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User ajouté(s)
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: kermesse non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Ajouter des users à la kermesse
+      tags:
+      - Kermesse
+  /kermesses/{id}/delete:
+    delete:
+      consumes:
+      - application/json
+      description: Allows an admin or the creator to update a Kermesse
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Kermesse delete
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: User not logged
+          schema:
+            $ref: '#/definitions/gin.H'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Kermesse not found
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Delete a Kermesse
+      tags:
+      - Kermesse
+  /kermesses/{id}/update:
+    put:
+      consumes:
+      - application/json
+      description: Allows an admin or the creator to update a Kermesse
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Kermesse ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Kermesse data
+        in: body
+        name: kermesse
+        required: true
+        schema:
+          $ref: '#/definitions/models.Kermesse'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Kermesse updated
+          schema:
+            $ref: '#/definitions/models.Kermesse'
+        "401":
+          description: User not logged
+          schema:
+            $ref: '#/definitions/gin.H'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Kermesse not found
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Update a Kermesse
+      tags:
+      - Kermesse
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: login to the app
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/requests.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Connexion réussie
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Allow you to log and have an JWT Token
+      tags:
+      - Auth
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Inform the client to delete the token
+      parameters:
+      - default: Bearer <Add access token here>
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Déconnexion réussie
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Logout
+      tags:
+      - Auth
+  /payment:
+    post:
+      consumes:
+      - application/json
+      description: Crée une intention de paiement pour acheter des jetons ou des tickets
+        de tombola
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Paiement des jetons ou tombola
+        in: body
+        name: payment
+        required: true
+        schema:
+          $ref: '#/definitions/requests.PaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Transaction'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Crée une intention de paiement pour les jetons ou les tickets de tombola
+      tags:
+      - Payment
+  /products:
+    get:
+      description: Récupère la liste de tous les produits
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Product'
+            type: array
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère tous les produits
+      tags:
+      - Product
+  /products/{id}/delete:
+    delete:
+      description: Supprime un utilisateur spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de du produit
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: produit non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Supprime un produit par ID
+      tags:
+      - Product
+  /products/{id}/update:
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un produit spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Produit à mettre à jour
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/models.Product'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Product'
+        "404":
+          description: Prodduit non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Met à jour un produit par son ID
+      tags:
+      - Product
+  /profile:
+    get:
+      consumes:
+      - application/json
+      description: Retourne les informations du profil de l'utilisateur connecté
+      parameters:
+      - default: Bearer <Add access token here>
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère le profil de l'utilisateur actuellement connecté
+      tags:
+      - Auth
+  /profile/update:
+    put:
+      consumes:
+      - application/json
+      description: Mettre à jour les champs du profil de l'utilisateur authentifié
+      parameters:
+      - default: Bearer <Ajouter le jeton d'accès ici>
+        description: Insérez votre jeton d'accès
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: Les données du profil à mettre à jour
+        in: body
+        name: User
+        required: true
+        schema:
+          $ref: '#/definitions/requests.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Profil mis à jour avec succès
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Erreur de validation
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Non autorisé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur du serveur
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Mise à jour du profil
+      tags:
+      - Auth
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user with the provided information
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/requests.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User created
+          schema:
+            $ref: '#/definitions/requests.SignupRequest'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "404":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Allow you to register as a new User
+      tags:
+      - Auth
+  /stands:
+    get:
+      description: Récupère la liste de tous les stands
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Stand'
+            type: array
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère tous les produits
+      tags:
+      - Stand
+  /stands/{id}:
+    get:
+      description: Récupère les informations d'un utilisateur spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "404":
+          description: Stand non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère un stand par ID
+      tags:
+      - Stand
+  /stands/{id}/delete:
+    delete:
+      description: Supprime un stand spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de du stand
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: stand non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Supprime un stand par ID
+      tags:
+      - Stand
+  /stands/{id}/interact:
+    post:
+      consumes:
+      - application/json
+      description: Permet d'interagir avec un stand en échange de jetons
+      parameters:
+      - description: ID du stand
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Interagir avec un stand
+      tags:
+      - Stand
+  /stands/{id}/update:
+    put:
+      consumes:
+      - application/json
+      description: Met à jour les informations d'un stand spécifique
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID de l'utilisateur
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Stand à mettre à jours
+        in: body
+        name: stand
+        required: true
+        schema:
+          $ref: '#/definitions/models.Stand'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Stand'
+        "404":
+          description: Stand non trouvé
+          schema:
+            $ref: '#/definitions/gin.H'
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Met à jour un stand par ID
+      tags:
+      - Stand
+  /stands/{stand_id}/products/{product_id}/buy:
+    post:
+      consumes:
+      - application/json
+      description: Permet à un utilisateur d'acheter un produit sur un stand avec
+        ses jetons
+      parameters:
+      - default: Bearer <Add access token here>
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID du stand
+        in: path
+        name: stand_id
+        required: true
+        type: integer
+      - description: ID du produit
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      - description: Quantité de produit à acheter
+        in: body
+        name: quantity
+        required: true
+        schema:
+          $ref: '#/definitions/requests.QuantityProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Achat d'un produit sur un stand
+      tags:
+      - Stand
+  /stands/{stand_id}/users/{user_id}/points:
+    post:
+      consumes:
+      - application/json
+      description: Un stand peut attribuer des points à un utilisateur en fonction
+        du type de stand
+      parameters:
+      - default: Bearer <Add access token here>
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ID du stand
+        in: path
+        name: stand_id
+        required: true
+        type: integer
+      - description: ID de l'utilisateur
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: Nombre de points à attribuer
+        in: body
+        name: points
+        required: true
+        schema:
+          $ref: '#/definitions/requests.GivePointsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success
+          schema:
+            $ref: '#/definitions/gin.H'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/gin.H'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/gin.H'
+      summary: Attribue des points à un utilisateur depuis un stand
+      tags:
+      - Stand
+  /students:
+    get:
+      description: Récupère la liste de tous les utilisateurs
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère tous les utilisateurs avec le rôle d'élève
+      tags:
+      - Student
+  /transactions:
+    get:
+      description: Récupère la liste de toutes les transactions
+      parameters:
+      - default: Bearer Add access token here
+        description: Insert your access token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Transaction'
+            type: array
+        "500":
+          description: Erreur serveur interne
+          schema:
+            $ref: '#/definitions/gin.H'
+      security:
+      - Bearer: []
+      summary: Récupère toutes les transactions faites par le user
+      tags:
+      - Transactions
+swagger: "2.0"
