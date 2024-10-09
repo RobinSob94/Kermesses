@@ -37,11 +37,11 @@ func SeedData(DB *gorm.DB) {
 	// Insertion des jetons
 	jetons := []models.Jetons{
 		{NbJetons: 15, Price: 10},
-		{NbJetons: 32, Price: 18},
-		{NbJetons: 65, Price: 25},
-		{NbJetons: 80, Price: 37},
-		{NbJetons: 110, Price: 50},
+		{NbJetons: 37, Price: 20},
+		{NbJetons: 80, Price: 40},
+		{NbJetons: 100, Price: 50},
 		{NbJetons: 150, Price: 70},
+		{NbJetons: 200, Price: 80},
 	}
 
 	for _, jeton := range jetons {

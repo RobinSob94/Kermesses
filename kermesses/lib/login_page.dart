@@ -1,6 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'profile_page.dart'; // Assurez-vous d'importer la page de profil
 
 class LoginPage extends StatefulWidget {
   @override
@@ -23,7 +26,10 @@ class _LoginPageState extends State<LoginPage> {
       final email = _emailController.text;
       final password = _passwordController.text;
 
-      final url = Uri.parse('http://localhost:8080/login');
+      final url = Uri.parse(
+          '${dotenv.env['API_PROTOCOL']}://${dotenv.env['API_HOST']}:${dotenv.env['API_PORT']}/login');
+          print(url);
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -33,12 +39,26 @@ class _LoginPageState extends State<LoginPage> {
       if (response.statusCode == 200) {
         // Traiter la réponse si la connexion est validée
         final responseData = jsonDecode(response.body);
-        if (responseData['status'] == 'success') {
+
+        if (response.statusCode == 200) {
+          // Stockez le token dans SharedPreferences
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('token', responseData['token']);
+
           // Si l'authentification est un succès
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Connexion réussie !')),
           );
-          // Redirige vers la page d'accueil ou tableau de bord
+
+          // Redirige vers la page profil
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ProfilePage(
+                logoutCallback: _logout, // Passez le callback de déconnexion
+              ),
+            ),
+          );
         } else {
           // Si la connexion échoue
           ScaffoldMessenger.of(context).showSnackBar(
@@ -56,6 +76,18 @@ class _LoginPageState extends State<LoginPage> {
         _isLoading = false;
       });
     }
+  }
+
+  // Fonction pour gérer la déconnexion
+  void _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token'); // Supprime le token stocké
+
+    // Redirige vers la page de connexion
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
   }
 
   @override
@@ -82,7 +114,6 @@ class _LoginPageState extends State<LoginPage> {
                   }
                   if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
                     return 'Veuillez entrer un email valide';
-
                   }
                   return null;
                 },

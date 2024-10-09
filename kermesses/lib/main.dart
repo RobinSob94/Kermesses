@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'login_page.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'profile_page.dart';
 
-void main() {
+void main() async {
+await dotenv.load(fileName: '.env');
   runApp(MyApp());
 }
 
@@ -34,6 +36,7 @@ class _CheckAuthState extends State<CheckAuth> {
     _checkLoginStatus();
   }
 
+  // Vérification du statut de connexion
   _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? storedToken = prefs.getString('token');
@@ -43,10 +46,19 @@ class _CheckAuthState extends State<CheckAuth> {
     });
   }
 
+  // Déconnexion
+  _logout() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    setState(() {
+      token = null; // Reset du token
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (token != null) {
-      return ProfilePage(); // Redirige vers la page de profil
+      return ProfilePage(logoutCallback: _logout); // Redirige vers la page de profil
     } else {
       return LoginPage(); // Redirige vers la page de connexion
     }
